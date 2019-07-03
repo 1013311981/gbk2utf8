@@ -1,8 +1,12 @@
 package top.rurenyinshui.gbk2utf8.util;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,30 +15,59 @@ import java.util.regex.Pattern;
  * 作者: Lx
  * 日期: 2019/7/2 22:02
  */
-
+@Component
 public class ConverEncoding {
 
-    static String CODE = "UTF-8";
+    @Value("${lixin.code}")
+    static String CODE ="UTF-8";
     static String FILE_SUFFIX = ".txt";//文件扩展名
     //  static String FILE_SUFFIX = ".css";
 //  static String FILE_SUFFIX = ".js";
 //  static String FILE_SUFFIX = ".htm";
-    static String srcDir = "D:\\ideaworkspace\\sth\\gbk2utf8\\src\\main\\resources\\static\\";//文件所在目录
+    static String srcDir ="/usr/local/java/oldfile/";//文件所在目录
 
+    static String realPath ="/usr/local/java/newfile/";//文件所在目录
     /**
      * @param args
      * @throws Exception
      */
-    public static void main(String[] args) throws Exception {
-        List<String> files = new ArrayList<String>();
-        fetchFileList(srcDir, files, FILE_SUFFIX);
-        String filecode = "";
-        for (String fileName : files) {
-            filecode = codeString(fileName);
-            if (!filecode.equals(CODE)) {
-                convert(fileName, filecode, fileName, CODE);
-            }
+//    public static void main(String[] args) throws Exception {
+//        List<String> files = new ArrayList<String>();
+//        fetchFileList(srcDir, files, FILE_SUFFIX);
+//        String filecode = "";
+//        for (String fileName : files) {
+//            filecode = codeString(fileName);
+//            if (!filecode.equals(CODE)) {
+//                convert(fileName, filecode, "E:/lixintest/newfile/"+System.currentTimeMillis()+FILE_SUFFIX, CODE);
+//            }
+//        }
+//    }
+
+    public static void transcodingOperation(String fileName) throws Exception {
+        String newFile = realPath + fileName ;
+        fileName = srcDir + fileName;
+        String fileCode = codeString(fileName);
+        convert(fileName,fileCode,newFile,CODE);
+
+    }
+    public static String[] chars = new String[] { "a", "b", "c", "d", "e", "f",
+            "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s",
+            "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5",
+            "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "I",
+            "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
+            "W", "X", "Y", "Z" };
+
+
+    public static String generateShortUuid() {
+        StringBuffer shortBuffer = new StringBuffer();
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        for (int i = 0; i < 8; i++) {
+            String str = uuid.substring(i * 4, i * 4 + 4);
+            int x = Integer.parseInt(str, 16);
+            shortBuffer.append(chars[x % 0x3E]);
         }
+        return shortBuffer.toString();
+
     }
 
     public static void convert(String oldFile, String oldCharset,
@@ -54,7 +87,7 @@ public class ConverEncoding {
                 content.append(System.getProperty("line.separator"));
             }
             bin.close();
-            File dir = new File(newFlie.substring(0, newFlie.lastIndexOf("\\")));
+            File dir = new File(newFlie.substring(0, newFlie.lastIndexOf("/")));
             if (!dir.exists()) {
                 dir.mkdirs();
             }

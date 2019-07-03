@@ -46,4 +46,19 @@ public class Response<T> implements Serializable {
         this();
         this.data = data;
     }
+    public static Response SUCCESS() {
+        return new Response();
+    }
+
+    public static <T> Response SUCCESS(T data) {
+        return new Response(data);
+    }
+
+    public static Response ERROR(ErrorCode code) {
+        return new Response(code.getCode(), code.getMsg());
+    }
+
+    public static <T> Response ERROR(ErrorCode code, T data) {
+        return new Response(code.getCode(), code.getMsg(), data);
+    }
 }

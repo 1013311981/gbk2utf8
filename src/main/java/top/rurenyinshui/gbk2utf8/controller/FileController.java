@@ -1,12 +1,15 @@
 package top.rurenyinshui.gbk2utf8.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import top.rurenyinshui.gbk2utf8.DTO.ErrorCode;
 import top.rurenyinshui.gbk2utf8.DTO.Response;
+import top.rurenyinshui.gbk2utf8.util.ConverEncoding;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,6 +24,10 @@ import java.io.*;
 @Slf4j
 public class FileController {
 
+    @Value("${lixin.filePath}")
+    String filePath;
+    @Value("${lixin.realPath}")
+    String realPath;
 
     @RequestMapping("/upload")
     public Response upload(@RequestParam("file") MultipartFile file){
@@ -35,7 +42,7 @@ public class FileController {
             String suffixName = fileName.substring(fileName.lastIndexOf("."));
             log.info("文件的后缀名为：" + suffixName);
             // 设置文件存储路径
-            String filePath = "/Users/dalaoyang/Downloads/";
+            fileName =  ConverEncoding.generateShortUuid()+ "_" + fileName;
             String path = filePath + fileName;
             File dest = new File(path);
             // 检测是否存在目录
@@ -43,21 +50,23 @@ public class FileController {
                 dest.getParentFile().mkdirs();// 新建文件夹
             }
             file.transferTo(dest);// 文件写入
-            return new Response("上传成功");
+            //进行转码操作
+            ConverEncoding.transcodingOperation(fileName);
+
+            return  Response.SUCCESS(fileName);
         } catch (IllegalStateException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return new Response("上传失败");
+        return  Response.ERROR(ErrorCode.UPLOAD_FAIL);
     }
 
     @GetMapping("/download")
-    public String downloadFile(HttpServletRequest request, HttpServletResponse response) {
-        String fileName = "a.txt";// 文件名
+    public Response downloadFile(@RequestParam("fileName") String fileName,HttpServletRequest request, HttpServletResponse response) {
         if (fileName != null) {
-            //设置文件路径
-            String realPath = "D:\\ideaworkspace\\sth\\gbk2utf8\\src\\main\\resources\\static\\";
             File file = new File(realPath , fileName);
             if (file.exists()) {
                 response.setContentType("application/force-download");// 设置强制下载不打开
@@ -74,7 +83,7 @@ public class FileController {
                         os.write(buffer, 0, i);
                         i = bis.read(buffer);
                     }
-                    return "下载成功";
+                    return Response.SUCCESS();
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -95,7 +104,7 @@ public class FileController {
                 }
             }
         }
-        return "下载失败";
+        return Response.ERROR(ErrorCode.DOWNLOAD_FAIL);
     }
 
 }
